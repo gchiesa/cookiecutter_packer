@@ -1,0 +1,77 @@
+#!/usr/bin/env groovy
+import groovy.json.JsonSlurperClassic
+
+config = [
+    awsCredentialsId: "{{ cookiecutter.jenkins_aws_credentials_id }}",
+    gitCredentialsId : "{{ cookiecutter.jenkins_git_credentials_id }}",
+    gitRepoUrl: "{{ cookiecutter.jenkins_git_repository_clone_url }}",
+    packerUrl: "{{ cookiecutter.packer_url }}",
+]
+
+// global packer tool
+packer = ''
+
+node {
+    // checkout code
+    stage('Checkout Code') {
+        checkout(changelog: false, poll: false,
+                scm: [ $class: 'GitSCM',
+                       branches: [[name: '*/master']],
+                       doGenerateSubmoduleConfigurations: false,
+                       extensions: [],
+                       submoduleCfg: [],
+                       userRemoteConfigs: [
+                               [credentialsId: config.gitCredentialsId,
+                                url: config.gitRepoUrl]
+                       ]
+                ])
+    }
+
+    // verify or install packer
+    stage('Packer Installation') {
+        if(sh(returnStatus: true, script: "which packer") != 0) {
+            def packer_path = 'tools/packer'
+            if ( !fileExists('tools/packer') ) {
+                sh 'mkdir tools/'
+                sh "curl -o tools/packer.zip ${config.packerUrl}"
+                sh 'unzip tools/packer.zip -d tools'
+                sh 'chmod +x tools/packer'
+                echo "Downloaded packer"
+            } else {
+                echo "Packer already downloaded in ${packer_path}"
+            }
+            packer = env.WORKSPACE + '/tools/packer'
+            echo "Packer available at: ${packer}"
+        } else {
+            packer = sh(returnStdout: true, script: "which packer")
+            echo "Packer available at system level"
+        }
+    }
+
+    // build the image
+    stage("Building : ${codePath}") {
+        // get the base image
+        def base = jsonParse(readFile('current_base.json'))
+        dir(codePath) {
+            def packerProject = sh(returnStdout: true, script: 'ls *.packer| head -1').trim()
+            echo "packer binary: ${packer}"
+            echo "packer file is ${packerProject}"
+            echo "base ami is: ${base.current_image}"
+            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: config.awsCredentialsId, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                sh "${packer} validate -var current_image=${base.current_image} ${packerProject}"
+//                sh "${packer} build -var current_image=${base.current_image} ${packerProject}"
+            }
+        }
+    }
+ }
+
+
+/**
+ * parse some json text into a groovy object
+ * @param json string with json data
+ */
+@NonCPS
+static
+jsonParse(String json) {
+    new JsonSlurperClassic().parseText(json)
+}

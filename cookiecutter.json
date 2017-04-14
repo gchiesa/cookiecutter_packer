@@ -1,0 +1,17 @@
+{
+  "full_name": "Your name",
+  "email": "Your address email (eq. you@example.com)",
+  "github_username": "Your github username",
+  "project_name": "Name of the project, used as image name",
+  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_') }}",
+  "project_short_description": "A short description of the project",
+  "release_date": "{% now 'local' %}",
+  "version": "0.1.0",
+  "base_image": "ami-70edb016",
+  "image_name": "{{ cookiecutter.project_slug }}",
+  "packer_url": "https://releases.hashicorp.com/packer/0.12.3/packer_0.12.3_linux_amd64.zip",
+  "jenkins_aws_credentials_id": "your jenkins aws credentials id to use to connect to aws",
+  "jenkins_git_credentials_id": "your jenkins git credentials id to use to connect to git",
+  "jenkins_git_repository_clone_url": "ssh://git@github.com:{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}.git",
+  "_extensions": [ "jinja2_time.TimeExtension" ]
+}

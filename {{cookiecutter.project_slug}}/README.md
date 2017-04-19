@@ -20,3 +20,5 @@ eg.
 
     ./_mob_ci_scripts/build.sh devops
 
+# Author
+{{ cookiecutter.full_name }} <mailto:{{ cookiecutter.email }}>

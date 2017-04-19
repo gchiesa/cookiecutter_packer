@@ -14,3 +14,4 @@ Generate a new Cookiecutter template layout: `cookiecutter gh:gchiesa/cookiecutt
 License
 -------
 This project is licensed under the terms of the [MIT License](/LICENSE)
+

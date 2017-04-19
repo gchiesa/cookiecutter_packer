@@ -51,7 +51,7 @@ node {
     // build the image
     stage("Building : ${codePath}") {
         // get the base image
-        def base = jsonParse(readFile('current_base.json'))
+        def base = currentBase
         dir(codePath) {
             def packerProject = sh(returnStdout: true, script: 'ls *.packer| head -1').trim()
             echo "packer binary: ${packer}"
@@ -59,7 +59,7 @@ node {
             echo "base ami is: ${base.current_image}"
             withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: config.awsCredentialsId, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
                 sh "${packer} validate -var current_image=${base.current_image} ${packerProject}"
-//                sh "${packer} build -var current_image=${base.current_image} ${packerProject}"
+                sh "${packer} build -var current_image=${base.current_image} ${packerProject}"
             }
         }
     }

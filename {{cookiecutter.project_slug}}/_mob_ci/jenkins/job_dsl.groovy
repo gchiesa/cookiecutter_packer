@@ -2,6 +2,7 @@
 import groovy.json.JsonSlurperClassic
 
 def jobMap = new JsonSlurperClassic().parseText(readFileFromWorkspace('_mob_ci/configs/jobs_map.json'))
+def defaultBaseImage = '{{ cookiecutter.base_image }}'
 
 // for each job tuple it will create a new pipeline on jenkins
 jobMap.each { jName, jPath ->
@@ -22,6 +23,7 @@ jobMap.each { jName, jPath ->
         }
         parameters {
             stringParam('codePath', jPath, 'Path of the packer directory')
+            stringParam('currentBase', defaultBaseImage, 'Current base AMI')
         }
     }
 }
